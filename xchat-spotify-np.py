@@ -59,5 +59,5 @@ def on_nowplaying(word, word_eol, userdata):
 
     npmsg = "Now Playing: %s - %s [%s] (%s)" % (title, artist, album, url)
     xchat.command("msg %s %s" % (channel, npmsg))
-
+    return xchat.EAT_ALL
 xchat.hook_command("nowplaying", on_nowplaying, help="/nowplaying - Announce currently playing track in Spotify")
