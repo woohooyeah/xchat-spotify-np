@@ -2,7 +2,9 @@
     Spotify Now Playing Script
     Requires Python, Xchat, Spotify and DBus
 
-    Erik Nosar
+    Dorian Harmans
+    
+    original by Erik Nosar - see https://github.com/enosar/xchat-spotify-np
     Script released under Public Domain
 """
 
@@ -14,8 +16,12 @@ import xchat
 import dbus
 
 bus = dbus.SessionBus()
-spotify = bus.get_object('org.mpris.MediaPlayer2.spotify',
-    '/org/mpris/MediaPlayer2')
+def get_spoti():
+    try:
+        return bus.get_object('org.mpris.MediaPlayer2.spotify', '/org/mpris/MediaPlayer2')
+    except DBusException:
+        print "\x02Either Spotify is not running or you have something wrong with your D-Bus setup."
+        return None
 
 """
 Sample data contained from within the following dbus call:
@@ -38,11 +44,11 @@ dbus.Dictionary(
 """
 
 def on_nowplaying(word, word_eol, userdata):
-    # Get current channel and get latest track from Spotify
-    context = xchat.get_context()
-    channel = context.get_info("channel")
-    trackinfo = spotify.Get("org.mpris.MediaPlayer2.Player","Metadata")
 
+    # Get current channel and get latest track from Spotify
+    spotify = get_spoti()
+    context = xchat.get_context()
+    trackinfo = spotify.Get("org.mpris.MediaPlayer2.Player","Metadata")
 
     # Get track information from DBus dictionary
     album       = trackinfo.get("xesam:album")
@@ -57,7 +63,8 @@ def on_nowplaying(word, word_eol, userdata):
     # The artist list is provided as an array. Combine all artists to a single string.
     artist = str(", ".join(trackinfo.get("xesam:artist"))).strip()
 
-    npmsg = "Now Playing: %s - %s [%s] (%s)" % (title, artist, album, url)
-    xchat.command("msg %s %s" % (channel, npmsg))
+    npmsg = "is now playing: %s - %s [%s] (%s)" % (artist, title, album, url)
+    xchat.command("me %s" % (npmsg))
     return xchat.EAT_ALL
-xchat.hook_command("nowplaying", on_nowplaying, help="/nowplaying - Announce currently playing track in Spotify")
+xchat.hook_command("now", on_nowplaying, help="/now - Announce currently playing track in Spotify")
+print "xchat-spotify-np plugin loaded"
